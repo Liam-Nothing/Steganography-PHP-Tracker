@@ -106,25 +106,29 @@ function is_clean($string)
 	return !preg_match("/[^a-z\d_-]/i", $string);
 }
 
-$file = htmlspecialchars($_GET['file']);
-$path = "../img_pure/" . $file;
-$date_now = date("d/m/Y H:i:s");
+if (isset($_GET['file'])) {
+	$file = htmlspecialchars($_GET['file']);
+	$path = "../img_pure/" . $file;
+	$date_now = date("d/m/Y H:i:s");
 
-$user_data = [
-	"date" => $date_now,
-	"HTTP_USER_AGENT" => htmlspecialchars($_SERVER['HTTP_USER_AGENT']),
-	"HTTP_ACCEPT_LANGUAGE" => htmlspecialchars($_SERVER['HTTP_ACCEPT_LANGUAGE']),
-	"ip" => get_ip()
-];
+	$user_data = [
+		"date" => $date_now,
+		"HTTP_USER_AGENT" => htmlspecialchars($_SERVER['HTTP_USER_AGENT']),
+		"HTTP_ACCEPT_LANGUAGE" => htmlspecialchars($_SERVER['HTTP_ACCEPT_LANGUAGE']),
+		"ip" => get_ip()
+	];
 
-if (is_clean($file)) {
-	if (file_exists($path . ".jpg")) {
-		$img = create_image($path . ".jpg", json_encode($user_data));
-		header('Content-Type: image/png');
-		imagepng($img);
-		imagedestroy($img);
+	if (is_clean($file)) {
+		if (file_exists($path . ".jpg")) {
+			$img = create_image($path . ".jpg", json_encode($user_data));
+			header('Content-Type: image/png');
+			imagepng($img);
+			imagedestroy($img);
+		} else {
+			header("Location: ../404.html");
+		}
 	} else {
-		header("Location: ../404.html");
+		header("Location: ../404.html#");
 	}
 } else {
 	header("Location: ../404.html#");

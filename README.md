@@ -3,6 +3,7 @@
 - ## Description :
 
 	This script can be useful on a blog for example or if you are a photographer and you share your pictures on your website. In case of picture leak you will be able to find the source.
+	
 	⚠️ Warning this script only work on **JPG/JPEG** because it doesn't support alpha compositing.
 
 - ## Requirements :

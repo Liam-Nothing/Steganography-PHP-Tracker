@@ -9,7 +9,7 @@
 
   - Apache server
 
-- ## Use :
+- ## Use encrypt pictures :
 
   - Add your images in `img_pure`.
   - From your web page like `index.html` target `img` folder. 
@@ -18,6 +18,10 @@
 	```html 
 	<img src="img/paysage01.jpg">
 	```
+
+- ## Use decrypt pictures :
+  - Download suspicious images next to `decypt.php`.
+  - Go on `http://localhost/Steganography-PHP-Tracker/decrypt.php?file=[Filename]`
 
 - ## Edit data in pictures :
 

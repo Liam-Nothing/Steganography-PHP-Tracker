@@ -1,5 +1,9 @@
 # Steganography Tracking PHP
 
+<p align="center">
+    <img src="README_SRC/main_img.png" width="500">
+</p>
+
 - ## Description :
 
 	This script can be useful on a blog for example or if you are a photographer and you share your pictures on your website. In case of picture leak you will be able to find the source.

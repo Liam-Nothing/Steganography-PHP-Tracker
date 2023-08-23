@@ -3,105 +3,90 @@
 //Convert string to binary
 function toBin($str)
 {
-	$str = (string)$str;
-	$l = strlen($str);
-	$result = '';
-	while ($l--) {
-		$result = str_pad(decbin(ord($str[$l])), 8, "0", STR_PAD_LEFT) . $result;
-	}
-	return $result;
+    $str = (string)$str;
+    $l = strlen($str);
+    $result = '';
+    while ($l--) {
+        $result = str_pad(decbin(ord($str[$l])), 8, "0", STR_PAD_LEFT) . $result;
+    }
+    return $result;
 }
 
 //Convert binary to string
 function toString($str)
 {
-	$text_array = explode("\r\n", chunk_split($str, 8));
-	$newstring = '';
-	for ($n = 0; $n < count($text_array) - 1; $n++) {
-		$newstring .= chr(base_convert($text_array[$n], 2, 10));
-	}
-	return $newstring;
+    $text_array = explode("\r\n", chunk_split($str, 8));
+    $newstring = '';
+    for ($n = 0; $n < count($text_array) - 1; $n++) {
+        $newstring .= chr(base_convert($text_array[$n], 2, 10));
+    }
+    return $newstring;
 }
 
-function is_clean($string)
-{
-	return !preg_match("/[^. a-z\d_-]/i", $string);
-}
 
-function decryptSteno($src)
-{
-	if (is_clean($src)) {
-		if (!file_exists($src)) {
-			$return_data["type"] = "error";
-			$return_data["message"] = "File doesn't exist.";
-			return $return_data;
-		}
-	} else {
-		$return_data["type"] = "error";
-		$return_data["message"] = "Filename may only contain alphanumeric characters or numbers.";
-		return $return_data;
-	}
+function decryptSteno($src) {
 
-	$img = imagecreatefrompng($src); //Returns image identifier
-	$real_message = ''; //Empty variable to store our message
+    $img = imagecreatefrompng($src);
 
-	$count = 0; //Wil be used to check our last char
-	$pixelX = 0; //Start pixel x coordinates
-	$pixelY = 0; //start pixel y coordinates
+    $real_message = '';
+    $count = 0;
+    $pixelX = 0;
+    $pixelY = 0;
 
-	list($width, $height, $type, $attr) = getimagesize($src); //get image size
+    list($width, $height, $type, $attr) = getimagesize($src);
 
-	for ($x = 0; $x < ($width * $height); $x++) { //Loop through pixel by pixel
-		// if($pixelX === $width+1){ //If this is true, we've reached the end of the row of pixels, start on next row
-		if ($pixelX === $width) { //If this is true, we've reached the end of the row of pixels, start on next row
-			$pixelY++;
-			$pixelX = 0;
-		}
+    while ($pixelY < $height) {
+        $rgb = imagecolorat($img, $pixelX, $pixelY);
+        $b = $rgb & 0xFF;
+        $blue = toBin($b);
 
-		if ($pixelY === $height && $pixelX === $width) { //Check if we reached the end of our file
-			echo ('Max Reached');
-			die();
-		}
+        $real_message .= $blue[strlen($blue) - 1];
+        $count++;
 
-		$rgb = imagecolorat($img, $pixelX, $pixelY); //Color of the pixel at the x and y positions
-		$r = ($rgb >> 16) & 0xFF; //returns red value for example int(119)
-		$g = ($rgb >> 8) & 0xFF; //^^ but green
-		$b = $rgb & 0xFF; //^^ but blue
+        if ($count === 8) {
+            if (toString(substr($real_message, -8)) === '|') {
+                $real_message = toString(substr($real_message, 0, -8));
 
-		$blue = toBin($b); //Convert our blue to binary
+                return [
+                    "type" => "success",
+                    "message" => "Success decrypting.",
+                    "content" => json_decode($real_message)
+                ];
+            }
+            $count = 0;
+        }
 
-		$real_message .= $blue[strlen($blue) - 1]; //Ad the lsb to our binary result
+        $pixelX++;
 
-		$count++; //Coun that a digit was added
+        if ($pixelX === $width) {
+            $pixelY++;
+            $pixelX = 0;
+        }
 
-		if ($count == 8) { //Every time we hit 8 new digits, check the value
-			if (toString(substr($real_message, -8)) === '|') { //Whats the value of the last 8 digits?
-				$real_message = toString(substr($real_message, 0, -8)); //convert to string and remove /
+        if ($pixelY === $height && $pixelX === $width) {
+            return [
+                "type" => "error",
+                "message" => "Max Reached"
+            ];
+        }
+    }
 
-				$return_data["type"] = "success";
-				$return_data["message"] = "Success decrypting.";
-				$return_data["content"] = json_decode($real_message);
-
-				return $return_data;
-			}
-			$count = 0; //Reset counter
-		}
-
-		$pixelX++; //Change x coordinates to next
-	}
+    return [
+        "type" => "error",
+        "message" => "Decryption failed"
+    ];
 }
 
 $return_data = [
-	"type" => null,
-	"message" => null
+    "type" => null,
+    "message" => null
 ];
 
-if (isset($_GET['file'])) {
-	$file = htmlspecialchars($_GET['file']);
-	$return_data = decryptSteno($file);
+if (isset($_FILES['image_with_data'])) {
+    $return_data = decryptSteno($_FILES['image_with_data']['tmp_name']);
 } else {
-	$return_data["type"] = "error";
-	$return_data["message"] = "Enter a file name please.";
+    $return_data["type"] = "error";
+    $return_data["message"] = "Enter a file please.";
 }
 
 header('Content-Type: application/json');
